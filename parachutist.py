@@ -117,13 +117,13 @@ class Parachutist:
         # Evaluación al aterrizar (solo se mide ángulo)
         dist_x = 0   # 🔥 Como ya no hay movimiento lateral, siempre centrado
         angle_penalty = abs(self.angle)
-        survived = (angle_penalty < 0.6)
 
         fitness = max(0.0, (0.6 - angle_penalty))
         fitness += 0.5 * self.genes.get("S", 0.0)
+        fitness += 0.3 * self.genes.get("F", 0.0)
 
         if render and screen:
-            if survived:
+            if fitness > 0.8:  # Aterrizaje correcto
                 font = pygame.font.SysFont("Arial", 28, bold=True)
                 txt = font.render("¡Buen trabajo!", True, (0, 120, 0))
                 screen.blit(txt, (target_x - 80, ground_y - 60))
@@ -132,4 +132,4 @@ class Parachutist:
             pygame.display.flip()
             pygame.time.delay(700)
 
-        return {"fitness": fitness, "survived": survived, "x": self.x, "angle": self.angle}
+        return {"fitness": fitness, "x": self.x, "angle": self.angle, "solution_found": fitness > 0.8}

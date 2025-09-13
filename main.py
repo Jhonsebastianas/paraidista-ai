@@ -5,8 +5,9 @@ Ejecutar: python main.py
 """
 import sys
 import pygame
+import random
 from ui import UI
-from genetic_algorithm import GeneticAlgorithm
+from genetic_algorithm import getPoblacion, seleccion, cruce, mutacion, calcularAdaptacion, tamanoPoblacion, iteraciones
 from parachutist import Parachutist
 
 FPS = 60
@@ -22,11 +23,11 @@ def main():
 
     # UI y GA
     ui = UI(screen, ground_y=GROUND_Y)
-    ga = GeneticAlgorithm(pop_size=18, gene_bounds={
-        "V": (1.5, 6.0),    # velocidad de caída base
-        "B": (-1.5, 1.5),   # balanceo lateral (der/izq)
-        "S": (0.0, 1.0)     # estabilidad (reduce rotación)
-    })
+    poblacion = []
+    generacion = 0
+    solution_found = False
+    running_simulation = False
+    max_generations = 100  # Límite máximo de generaciones para evitar bucles infinitos
 
     running = True
 
@@ -39,55 +40,92 @@ def main():
         # Botones
         if ui.clicked_setup:
             # Genera población inicial
-            ga.setup_population()
-            ui.set_population(ga.population)
-            ui.generation = 0
+            poblacion = getPoblacion(tamanoPoblacion)
+            # Convertir a ParIndividual para UI
+            from genetic_algorithm import ParIndividual
+            ui_population = [ParIndividual(ind) for ind in poblacion]
+            for ind in ui_population:
+                ind.fitness = calcularAdaptacion(ind.cromosoma)
+            ui.set_population(ui_population)
+            generacion = 0
+            ui.generation = generacion
+            solution_found = False
             ui.clicked_setup = False
 
         if ui.clicked_run:
-            # Bloqueante hasta que al menos uno sobreviva
             ui.clicked_run = False
+            if solution_found:
+                print("Solución ya encontrada. Presiona Setup para reiniciar.")
+                continue
+            if not poblacion:
+                print("Primero presiona Setup para generar la población inicial.")
+                continue
+            # Iniciar simulación automática
+            running_simulation = True
+            generacion = 0  # Iniciar con generación 0
+            simulation_count = 0  # Contador de simulaciones
+            ui.generation = simulation_count
             solution_found = False
-            max_generations = 200
-            while not solution_found and ui.generation < max_generations:
-                ui.generation = ga.generation
-                # Simular y evaluar cada individuo (con render)
-                fitnesses = []
-                survivors = []
-                for p in ga.population:
-                    # Crear instancia visual de Parachutist con genes
-                    parachute = Parachutist.from_genes(p.genes, start_x=SCREEN_SIZE[0] // 2)
-                    # Simula con render callback para ver caída
-                    result = parachute.simulate(
-                        screen=screen,
-                        ground_y=GROUND_Y,
-                        render=True,
-                        ui=ui
-                    )
-                    p.fitness = result["fitness"]
-                    p.survived = result["survived"]
-                    fitnesses.append(p.fitness)
-                    survivors.append(p.survived)
 
-                # Mostrar panel una vez por generación
-                ui.set_population(ga.population)
-                pygame.display.flip()
-                pygame.time.delay(600)
-
-                # Check
-                if any(survivors):
+        if running_simulation and not solution_found and generacion < max_generations:
+            # Ejecutar una generación
+            generacion += 1
+            # Simular y evaluar cada individuo (con render)
+            fitnesses = []
+            for ind in poblacion:
+                simulation_count += 1
+                ui.generation = simulation_count
+                # Crear instancia visual de Parachutist con genes
+                genes_dict = {'V': ind[0], 'B': ind[1], 'S': ind[2], 'F': ind[3]}
+                parachute = Parachutist.from_genes(genes_dict, start_x=SCREEN_SIZE[0] // 2)
+                # Simula con render callback para ver caída
+                result = parachute.simulate(
+                    screen=screen,
+                    ground_y=GROUND_Y,
+                    render=True,
+                    ui=ui
+                )
+                fitness = result["fitness"]
+                fitnesses.append(fitness)
+                if result.get("solution_found", False):
                     solution_found = True
-                    print(f"¡Solución encontrada en generación {ga.generation}!")
-                else:
-                    ga.evolve()
-                    ui.generation = ga.generation
+                    running_simulation = False
+                    print(f"¡Solución encontrada en generación {generacion}!")
+                    break  # Detener simulación de la generación actual
+
+            # Mostrar panel una vez por generación
+            # Convertir a ParIndividual para UI
+            ui_population = [ParIndividual(ind) for ind in poblacion]
+            for ind, fit in zip(ui_population, fitnesses):
+                ind.fitness = fit
+            # Los no simulados quedan con fitness 0
+            ui.set_population(ui_population)
+            pygame.display.flip()
+            pygame.time.delay(600)
 
             if not solution_found:
-                print("No se consiguió solución dentro del máximo de generaciones.")
+                # Evolución
+                seleccionados = seleccion(poblacion)
+                nuevaPoblacion = []
+                while len(nuevaPoblacion) < tamanoPoblacion:
+                    padres = random.sample(seleccionados, 2)
+                    hijos = cruce(padres[0], padres[1])
+                    hijos = [mutacion(h) for h in hijos]
+                    nuevaPoblacion.extend(hijos)
+                poblacion = nuevaPoblacion[:tamanoPoblacion]
+            elif generacion >= max_generations:
+                running_simulation = False
+                print(f"No se encontró solución en {max_generations} generaciones. Presiona Setup para reiniciar.")
 
         # Render UI base cuando no estamos en la corrida
         ui.render_background()
-        ui.render_population_preview(ga.population)
+        if poblacion:
+            ui_population = [ParIndividual(ind) for ind in poblacion]
+            for ind in ui_population:
+                ind.fitness = calcularAdaptacion(ind.cromosoma)
+            ui.render_population_preview(ui_population)
+        else:
+            ui.render_population_preview([])
         ui.render_panel()
         pygame.display.flip()
         clock.tick(FPS)

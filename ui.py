@@ -95,11 +95,11 @@ class UI:
                 f"V: {best.genes['V']:.2f}",
                 f"B: {best.genes['B']:.2f}",
                 f"S: {best.genes['S']:.2f}",
-                f"F (best): {best.fitness:.2f}",
-                f"S (survived): {int(best.survived)}"
+                f"F: {best.genes['F']:.2f}",
+                f"Fitness: {best.fitness:.2f}"
             ]
         else:
-            stats = ["V: -", "B: -", "S: -", "F (best): -", "S (survived): -"]
+            stats = ["V: -", "B: -", "S: -", "F: -", "Fitness: -"]
 
         for s in stats:
             txt = self.font.render(s, True, (10, 10, 10))
@@ -125,5 +125,5 @@ class UI:
             # map genes a posición de muestra
             vy = int(14 + (ind.genes["V"] - 1.5) * 6)
             bx = int( gx + ind.genes["B"] * 4)
-            color = (40, 40, 200) if ind.survived else (180, 40, 40)
+            color = (40, 40, 200) if ind.fitness > 0.8 else (180, 40, 40)
             #pygame.draw.circle(self.screen, color, (bx, base_y + vy), 6)
