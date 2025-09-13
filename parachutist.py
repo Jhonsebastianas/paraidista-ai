@@ -14,8 +14,8 @@ class Parachutist:
     Genes: V (velocidad de caída), B (balanceo lateral), S (estabilidad)
     """
 
-    WIDTH = 32
-    HEIGHT = 48
+    WIDTH = 32 * 3
+    HEIGHT = 48 * 2
     parachute_img = None
     dust_img = None
 
@@ -41,7 +41,7 @@ class Parachutist:
             dust_path = os.path.join("assets", "dust.png")
             if os.path.exists(dust_path):
                 img = pygame.image.load(dust_path).convert_alpha()
-                Parachutist.dust_img = pygame.transform.scale(img, (50, 30))
+                Parachutist.dust_img = pygame.transform.scale(img, (100, 80))
             else:
                 Parachutist.dust_img = None
 
