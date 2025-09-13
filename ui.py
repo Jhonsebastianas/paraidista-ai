@@ -126,4 +126,4 @@ class UI:
             vy = int(14 + (ind.genes["V"] - 1.5) * 6)
             bx = int( gx + ind.genes["B"] * 4)
             color = (40, 40, 200) if ind.survived else (180, 40, 40)
-            pygame.draw.circle(self.screen, color, (bx, base_y + vy), 6)
+            #pygame.draw.circle(self.screen, color, (bx, base_y + vy), 6)

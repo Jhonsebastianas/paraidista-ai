@@ -93,8 +93,11 @@ class Parachutist:
         target_x = screen.get_width() // 2 if screen else 400
 
         while self.y < ground_y and steps < max_steps:
+            # 🔥 Actualizar solo la física vertical
             self.step_physics(dt=1.0)
+            self.x = target_x   # 🔥 Mantener X fijo en el centro
             steps += 1
+
             if render and screen:
                 if ui:
                     ui.render_background()
@@ -102,7 +105,7 @@ class Parachutist:
                 else:
                     screen.fill((200, 220, 255))
                     pygame.draw.rect(screen, (50, 160, 70),
-                                     (0, ground_y, screen.get_width(), screen.get_height() - ground_y))
+                                    (0, ground_y, screen.get_width(), screen.get_height() - ground_y))
                 self.render(screen)
                 pygame.display.flip()
                 for ev in pygame.event.get():
@@ -111,12 +114,12 @@ class Parachutist:
                         raise SystemExit
                 clock.tick(60)
 
-        # Evaluación al aterrizar
-        dist_x = abs(self.x - target_x)
+        # Evaluación al aterrizar (solo se mide ángulo)
+        dist_x = 0   # 🔥 Como ya no hay movimiento lateral, siempre centrado
         angle_penalty = abs(self.angle)
-        survived = (dist_x < 40) and (angle_penalty < 0.6)
+        survived = (angle_penalty < 0.6)
 
-        fitness = max(0.0, 1.0 - (dist_x / 400.0)) + max(0.0, (0.6 - angle_penalty))
+        fitness = max(0.0, (0.6 - angle_penalty))
         fitness += 0.5 * self.genes.get("S", 0.0)
 
         if render and screen:
