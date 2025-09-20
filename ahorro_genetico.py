@@ -16,7 +16,6 @@ def algoritmo_genetico(ingreso_mensual, meta_ahorro, plazo_meses):
     def fitness(individuo):
         porcentaje = individuo[0]
         ahorro_total = ingreso_mensual * porcentaje * plazo_meses
-        print("Absoluto raro: ", -abs(meta_ahorro - ahorro_total))
         return -abs(meta_ahorro - ahorro_total)
 
     def seleccionar_padres(poblacion):
@@ -73,45 +72,52 @@ root.configure(bg="#f0f4f8")
 COLOR_PRIMARIO = "#1976d2"
 COLOR_SECUNDARIO = "#ffffff"
 COLOR_BOTON = "#43a047"
-COLOR_BOTON_TXT = "#ffffff"
+COLOR_BOTON_TXT = "#000000"
 FUENTE_TITULO = ("Segoe UI", 18, "bold")
 FUENTE_LABEL = ("Segoe UI", 12)
 FUENTE_RESULT = ("Consolas", 13, "bold")
 
-main_frame = tk.Frame(root, bg="#f0f4f8", padx=30, pady=30)
-main_frame.pack(fill="both", expand=True)
+
+# Centrar el frame principal y dar más espacio
+main_frame = tk.Frame(root, bg="#f0f4f8")
+main_frame.pack(expand=True)
+main_frame.grid_rowconfigure(0, weight=1)
+main_frame.grid_columnconfigure(0, weight=1)
+main_frame.grid_columnconfigure(1, weight=1)
+
 
 # Izquierda: Entradas
-frame_izq = tk.Frame(main_frame, bg=COLOR_SECUNDARIO, bd=2, relief="groove")
-frame_izq.grid(row=0, column=0, sticky="nsew", padx=(0, 30), ipadx=20, ipady=20)
+frame_izq = tk.Frame(main_frame, bg=COLOR_SECUNDARIO, bd=2, relief="groove", padx=30, pady=30)
+frame_izq.grid(row=0, column=0, sticky="nsew", padx=(0, 40), pady=30)
 
-tk.Label(frame_izq, text="Planificador de Ahorro", font=FUENTE_TITULO, fg=COLOR_PRIMARIO, bg=COLOR_SECUNDARIO).grid(row=0, column=0, columnspan=2, pady=(0, 20))
+tk.Label(frame_izq, text="Planificador de Ahorro", font=FUENTE_TITULO, fg=COLOR_PRIMARIO, bg=COLOR_SECUNDARIO).grid(row=0, column=0, columnspan=2, pady=(0, 25))
 
-tk.Label(frame_izq, text="💰 Ingreso mensual:", font=FUENTE_LABEL, bg=COLOR_SECUNDARIO).grid(row=1, column=0, sticky="w")
-entry_ingreso = ttk.Entry(frame_izq, font=FUENTE_LABEL, width=20)
-entry_ingreso.grid(row=2, column=0, pady=(0, 15), sticky="w")
+tk.Label(frame_izq, text="💰 Ingreso mensual:", font=FUENTE_LABEL, bg=COLOR_SECUNDARIO).grid(row=1, column=0, sticky="w", pady=(0, 2))
+entry_ingreso = ttk.Entry(frame_izq, font=FUENTE_LABEL, width=22)
+entry_ingreso.grid(row=2, column=0, pady=(0, 18), padx=(8,8), sticky="ew")
 
-tk.Label(frame_izq, text="🎯 Meta de ahorro total:", font=FUENTE_LABEL, bg=COLOR_SECUNDARIO).grid(row=3, column=0, sticky="w")
-entry_meta = ttk.Entry(frame_izq, font=FUENTE_LABEL, width=20)
-entry_meta.grid(row=4, column=0, pady=(0, 15), sticky="w")
+tk.Label(frame_izq, text="🎯 Meta de ahorro total:", font=FUENTE_LABEL, bg=COLOR_SECUNDARIO).grid(row=3, column=0, sticky="w", pady=(0, 2))
+entry_meta = ttk.Entry(frame_izq, font=FUENTE_LABEL, width=22)
+entry_meta.grid(row=4, column=0, pady=(0, 18), padx=(8,8), sticky="ew")
 
-tk.Label(frame_izq, text="📅 Plazo en meses:", font=FUENTE_LABEL, bg=COLOR_SECUNDARIO).grid(row=5, column=0, sticky="w")
-entry_plazo = ttk.Entry(frame_izq, font=FUENTE_LABEL, width=20)
-entry_plazo.grid(row=6, column=0, pady=(0, 20), sticky="w")
+tk.Label(frame_izq, text="📅 Plazo en meses:", font=FUENTE_LABEL, bg=COLOR_SECUNDARIO).grid(row=5, column=0, sticky="w", pady=(0, 2))
+entry_plazo = ttk.Entry(frame_izq, font=FUENTE_LABEL, width=22)
+entry_plazo.grid(row=6, column=0, pady=(0, 25), padx=(8,8), sticky="ew")
 
 btn_calcular = tk.Button(
     frame_izq, text="Calcular", command=calcular,
     font=("Segoe UI", 12, "bold"), bg=COLOR_BOTON, fg=COLOR_BOTON_TXT,
     activebackground="#388e3c", activeforeground=COLOR_BOTON_TXT, bd=0, padx=20, pady=8, cursor="hand2"
 )
-btn_calcular.grid(row=7, column=0, pady=(10, 0), sticky="w")
+btn_calcular.grid(row=7, column=0, pady=(10, 0), sticky="ew")
+
 
 # Derecha: Resultados
-frame_der = tk.Frame(main_frame, bg=COLOR_SECUNDARIO, bd=2, relief="groove")
-frame_der.grid(row=0, column=1, sticky="nsew", ipadx=20, ipady=20)
+frame_der = tk.Frame(main_frame, bg=COLOR_SECUNDARIO, bd=2, relief="groove", padx=30, pady=30)
+frame_der.grid(row=0, column=1, sticky="nsew", pady=30)
 
-tk.Label(frame_der, text="🔹 Resultados", font=FUENTE_TITULO, fg=COLOR_PRIMARIO, bg=COLOR_SECUNDARIO).pack(anchor="w", pady=(0, 10))
+tk.Label(frame_der, text="🔹 Resultados", font=FUENTE_TITULO, fg=COLOR_PRIMARIO, bg=COLOR_SECUNDARIO).pack(anchor="w", pady=(0, 18))
 resultado = tk.StringVar()
-tk.Label(frame_der, textvariable=resultado, font=FUENTE_RESULT, bg=COLOR_SECUNDARIO, fg="#222").pack(anchor="w", pady=10)
+tk.Label(frame_der, textvariable=resultado, font=FUENTE_RESULT, bg=COLOR_SECUNDARIO, fg="#222").pack(anchor="w", pady=18, padx=8)
 
 root.mainloop()
