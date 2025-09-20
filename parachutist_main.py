@@ -62,19 +62,19 @@ def main():
                 continue
             # Iniciar simulación automática
             running_simulation = True
-            generacion = 0  # Iniciar con generación 0
-            simulation_count = 0  # Contador de simulaciones
-            ui.generation = simulation_count
+            generacion = 0  # Iniciar con generación 0  
+            ui.generation = generacion
             solution_found = False
 
         if running_simulation and not solution_found and generacion < max_generations:
-            # Ejecutar una generación
-            generacion += 1
+            # Convertir a ParIndividual para UI
+            ui_population = [ParIndividual(ind) for ind in poblacion]
             # Simular y evaluar cada individuo (con render)
             fitnesses = []
-            for ind in poblacion:
-                simulation_count += 1
-                ui.generation = simulation_count
+            for i, ind in enumerate(poblacion):
+                # Ejecutar una generación
+                generacion += 1
+                ui.generation = generacion
                 # Crear instancia visual de Parachutist con genes
                 genes_dict = {'V': ind[0], 'B': ind[1], 'S': ind[2], 'F': ind[3]}
                 parachute = Parachutist.from_genes(genes_dict, start_x=SCREEN_SIZE[0] // 2)
@@ -87,21 +87,16 @@ def main():
                 )
                 fitness = result["fitness"]
                 fitnesses.append(fitness)
+                ui_population[i].fitness = fitness
+                # Actualizar panel en tiempo real
+                ui.set_population(ui_population)
+                ui.render_panel()
+                pygame.display.flip()
                 if result.get("solution_found", False):
                     solution_found = True
                     running_simulation = False
                     print(f"¡Solución encontrada en generación {generacion}!")
                     break  # Detener simulación de la generación actual
-
-            # Mostrar panel una vez por generación
-            # Convertir a ParIndividual para UI
-            ui_population = [ParIndividual(ind) for ind in poblacion]
-            for ind, fit in zip(ui_population, fitnesses):
-                ind.fitness = fit
-            # Los no simulados quedan con fitness 0
-            ui.set_population(ui_population)
-            pygame.display.flip()
-            pygame.time.delay(600)
 
             if not solution_found:
                 # Evolución

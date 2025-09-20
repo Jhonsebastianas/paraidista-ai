@@ -12,9 +12,9 @@ tamano_cromosoma = 4  # V, B, S, F
 bounds = [(1.5, 6.0), (-1.5, 1.5), (0.0, 1.0), (0.0, 1.0)]  # límites para V, B, S, F
 
 # --- Parámetros GA ---
-tamanoPoblacion = 20
+tamanoPoblacion = 30  # Aumentado para más diversidad
 probSeleccion = 0.5
-probMutacion = 0.1  # Ajustado para valores continuos
+probMutacion = 0.05  # Reducido para evolución más gradual
 probCruce = 0.8
 iteraciones = 100  # Máximo de generaciones
 
@@ -81,7 +81,7 @@ def ejecutar_algoritmo_genetico():
 
         # Verificar si hay solución óptima
         mejor_fitness = max(calcularAdaptacion(ind) for ind in poblacion)
-        if mejor_fitness > 0.8:  # Umbral para aterrizaje correcto
+        if mejor_fitness > 0.95:  # Umbral más alto para evolución gradual
             print(f"¡Solución encontrada en generación {generacion}!")
             break
 
