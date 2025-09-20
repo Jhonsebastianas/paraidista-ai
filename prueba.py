@@ -1,73 +1,52 @@
 import random as rd
 
-# --- Categorías de presupuesto ---
-categorias = ["Ahorro", "Alimentación", "Vivienda", "Entretenimiento", "Educación"]
-tamano = len(categorias)
-tamanoPoblacion = 8
+# === Entrada de usuario ===
+ingreso_mensual = float(input("💰 Ingreso mensual: "))
+meta_ahorro = float(input("🎯 Meta de ahorro total: "))
+plazo_meses = int(input("📅 Plazo en meses: "))
+
+# === Parámetros del AG ===
+tamano_poblacion = 12
 iteraciones = 50
-probMutacion = 0.3
-probCruce = 0.8
+prob_mutacion = 0.3
 
-# --- Generar un plan financiero (cromosoma) ---
-def getIndividuo():
-    plan = [rd.randint(0, 100) for _ in range(tamano)]
-    total = sum(plan)
-    # Normalizamos a 100%
-    return [round((p/total)*100) for p in plan]
+# Cromosoma: porcentaje destinado a ahorro
+def crear_individuo():
+    return [rd.uniform(0.1, 0.8)]  # porcentaje de ahorro entre 10% y 80%
 
-def getPoblacion(n):
-    return [getIndividuo() for _ in range(n)]
+def crear_poblacion():
+    return [crear_individuo() for _ in range(tamano_poblacion)]
 
-# --- Función de aptitud (fitness) ---
-def calcularAdaptacion(individuo):
-    pesos = [2.0, 1.0, 1.0, 0.5, 1.5]  # prioridades: más ahorro y educación
-    score = sum(individuo[i]*pesos[i] for i in range(tamano))
-    if sum(individuo) != 100:  # penalización si no suma 100%
-        return 0
-    return score
+def fitness(individuo):
+    porcentaje = individuo[0]
+    ahorro_total = ingreso_mensual * porcentaje * plazo_meses
+    return -abs(meta_ahorro - ahorro_total)
 
-# --- Selección ---
-def seleccion(poblacion):
-    valorados = [(calcularAdaptacion(i), i) for i in poblacion]
-    valorados = sorted(valorados, reverse=True, key=lambda x: x[0])
-    return [ind for _, ind in valorados[:len(valorados)//2]]
+def seleccionar_padres(poblacion):
+    return rd.sample(poblacion, 2)
 
-# --- Cruce ---
 def cruce(p1, p2):
-    if rd.random() < probCruce:
-        punto = rd.randint(1, tamano-1)
-        h1 = p1[:punto] + p2[punto:]
-        h2 = p2[:punto] + p1[punto:]
-        return [h1, h2]
-    return [p1, p2]
+    return [(p1[0] + p2[0]) / 2]
 
-# --- Mutación ---
-def mutacion(ind):
-    if rd.random() < probMutacion:
-        pos = rd.randint(0, tamano-1)
-        cambio = rd.randint(-10, 10)
-        ind[pos] = max(0, ind[pos] + cambio)
-        total = sum(ind)
-        if total > 0:
-            ind = [round((p/total)*100) for p in ind]
-    return ind
+def mutacion(individuo):
+    if rd.random() < prob_mutacion:
+        individuo[0] = rd.uniform(0.1, 0.8)
+    return individuo
 
-# --- Algoritmo principal ---
-poblacion = getPoblacion(tamanoPoblacion)
+# === Algoritmo Genético ===
+poblacion = crear_poblacion()
+for _ in range(iteraciones):
+    poblacion = sorted(poblacion, key=fitness, reverse=True)
+    nueva = poblacion[:2]  # elitismo
+    print(nueva)
+    while len(nueva) < tamano_poblacion:
+        padres = seleccionar_padres(poblacion[:5])
+        hijo = cruce(*padres)
+        hijo = mutacion(hijo)
+        nueva.append(hijo)
+    poblacion = nueva
 
-for gen in range(iteraciones):
-    seleccionados = seleccion(poblacion)
-    nuevaPoblacion = []
-    while len(nuevaPoblacion) < tamanoPoblacion:
-        padres = rd.sample(seleccionados, 2)
-        hijos = cruce(padres[0], padres[1])
-        hijos = [mutacion(h) for h in hijos]
-        nuevaPoblacion.extend(hijos)
-    poblacion = nuevaPoblacion[:tamanoPoblacion]
-
-# --- Mejor plan ---
-mejor = max(poblacion, key=lambda ind: calcularAdaptacion(ind))
-print("\nMejor plan financiero después de 50 generaciones:")
-for cat, val in zip(categorias, mejor):
-    print(f"{cat}: {val}%")
-print("Puntaje:", calcularAdaptacion(mejor))
+mejor = max(poblacion, key=fitness)
+print("\n🔹 Mejor plan encontrado (Meta de ahorro en X meses)")
+print(f"Ahorro mensual: {mejor[0]*100:.2f}% del ingreso")
+print(f"Ahorro total: {ingreso_mensual * mejor[0] * plazo_meses:.2f} / Meta: {meta_ahorro}")
