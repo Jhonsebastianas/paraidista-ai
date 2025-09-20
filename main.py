@@ -1,12 +1,16 @@
 """
 main.py
-Punto de entrada para la simulación del paracaidista con algoritmo genético.
+Punto de entrada principal con menú de selección.
+Permite elegir entre simulación del paracaidista y planificador de ahorro.
 Ejecutar: python main.py
 """
 import sys
 import pygame
 import random
+import subprocess
+import os
 from ui import UI
+from menu import show_main_menu
 from genetic_algorithm import getPoblacion, seleccion, cruce, mutacion, calcularAdaptacion, tamanoPoblacion, iteraciones
 from parachutist import Parachutist
 
@@ -15,120 +19,68 @@ SCREEN_SIZE = (900, 600)
 GROUND_Y = 520  # y en píxeles del "suelo"
 
 
+def run_parachutist_simulation():
+    """Ejecuta la simulación del paracaidista en una nueva ventana."""
+    try:
+        script_path = os.path.join(os.path.dirname(__file__), "parachutist_main.py")
+        subprocess.run([sys.executable, script_path], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error al ejecutar la simulación del paracaidista: {e}")
+    except FileNotFoundError:
+        print("No se encontró el archivo parachutist_main.py")
+
+    return "menu"
+
+
+def run_savings_planner():
+    """Ejecuta el planificador de ahorro genético."""
+    try:
+        # Ejecutar el script de ahorro genético
+        script_path = os.path.join(os.path.dirname(__file__), "ahorro_genetico.py")
+        subprocess.run([sys.executable, script_path], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error al ejecutar el planificador de ahorro: {e}")
+    except FileNotFoundError:
+        print("No se encontró el archivo ahorro_genetico.py")
+
+    return "menu"  # Volver al menú después de cerrar la ventana de Tkinter
+
+
 def main():
+    """Función principal que maneja el flujo de la aplicación."""
     pygame.init()
     screen = pygame.display.set_mode(SCREEN_SIZE)
-    pygame.display.set_caption("Paracaidista - Algoritmo Genético")
+    pygame.display.set_caption("Algoritmos Genéticos - Menú Principal")
     clock = pygame.time.Clock()
 
-    # UI y GA
-    ui = UI(screen, ground_y=GROUND_Y)
-    poblacion = []
-    generacion = 0
-    solution_found = False
-    running_simulation = False
-    max_generations = 100  # Límite máximo de generaciones para evitar bucles infinitos
+    current_state = "menu"
 
-    running = True
+    while current_state != "exit":
+        if current_state == "menu":
+            # Mostrar menú principal
+            selection = show_main_menu(screen)
+            if selection == "parachutist":
+                current_state = "parachutist"
+            elif selection == "savings":
+                current_state = "savings"
+            elif selection == "exit":
+                current_state = "exit"
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            ui.handle_event(event)
+        elif current_state == "parachutist":
+            # Ejecutar simulación del paracaidista
+            result = run_parachutist_simulation()
+            if result == "menu":
+                current_state = "menu"
+            else:
+                current_state = "exit"
 
-        # Botones
-        if ui.clicked_setup:
-            # Genera población inicial
-            poblacion = getPoblacion(tamanoPoblacion)
-            # Convertir a ParIndividual para UI
-            from genetic_algorithm import ParIndividual
-            ui_population = [ParIndividual(ind) for ind in poblacion]
-            for ind in ui_population:
-                ind.fitness = calcularAdaptacion(ind.cromosoma)
-            ui.set_population(ui_population)
-            generacion = 0
-            ui.generation = generacion
-            solution_found = False
-            ui.clicked_setup = False
-
-        if ui.clicked_run:
-            ui.clicked_run = False
-            if solution_found:
-                print("Solución ya encontrada. Presiona Setup para reiniciar.")
-                continue
-            if not poblacion:
-                print("Primero presiona Setup para generar la población inicial.")
-                continue
-            # Iniciar simulación automática
-            running_simulation = True
-            generacion = 0  # Iniciar con generación 0
-            simulation_count = 0  # Contador de simulaciones
-            ui.generation = simulation_count
-            solution_found = False
-
-        if running_simulation and not solution_found and generacion < max_generations:
-            # Ejecutar una generación
-            generacion += 1
-            # Simular y evaluar cada individuo (con render)
-            fitnesses = []
-            for ind in poblacion:
-                simulation_count += 1
-                ui.generation = simulation_count
-                # Crear instancia visual de Parachutist con genes
-                genes_dict = {'V': ind[0], 'B': ind[1], 'S': ind[2], 'F': ind[3]}
-                parachute = Parachutist.from_genes(genes_dict, start_x=SCREEN_SIZE[0] // 2)
-                # Simula con render callback para ver caída
-                result = parachute.simulate(
-                    screen=screen,
-                    ground_y=GROUND_Y,
-                    render=True,
-                    ui=ui
-                )
-                fitness = result["fitness"]
-                fitnesses.append(fitness)
-                if result.get("solution_found", False):
-                    solution_found = True
-                    running_simulation = False
-                    print(f"¡Solución encontrada en generación {generacion}!")
-                    break  # Detener simulación de la generación actual
-
-            # Mostrar panel una vez por generación
-            # Convertir a ParIndividual para UI
-            ui_population = [ParIndividual(ind) for ind in poblacion]
-            for ind, fit in zip(ui_population, fitnesses):
-                ind.fitness = fit
-            # Los no simulados quedan con fitness 0
-            ui.set_population(ui_population)
-            pygame.display.flip()
-            pygame.time.delay(600)
-
-            if not solution_found:
-                # Evolución
-                seleccionados = seleccion(poblacion)
-                nuevaPoblacion = []
-                while len(nuevaPoblacion) < tamanoPoblacion:
-                    padres = random.sample(seleccionados, 2)
-                    hijos = cruce(padres[0], padres[1])
-                    hijos = [mutacion(h) for h in hijos]
-                    nuevaPoblacion.extend(hijos)
-                poblacion = nuevaPoblacion[:tamanoPoblacion]
-            elif generacion >= max_generations:
-                running_simulation = False
-                print(f"No se encontró solución en {max_generations} generaciones. Presiona Setup para reiniciar.")
-
-        # Render UI base cuando no estamos en la corrida
-        ui.render_background()
-        if poblacion:
-            ui_population = [ParIndividual(ind) for ind in poblacion]
-            for ind in ui_population:
-                ind.fitness = calcularAdaptacion(ind.cromosoma)
-            ui.render_population_preview(ui_population)
-        else:
-            ui.render_population_preview([])
-        ui.render_panel()
-        pygame.display.flip()
-        clock.tick(FPS)
+        elif current_state == "savings":
+            # Ejecutar planificador de ahorro
+            result = run_savings_planner()
+            if result == "menu":
+                current_state = "menu"
+            else:
+                current_state = "exit"
 
     pygame.quit()
     sys.exit()

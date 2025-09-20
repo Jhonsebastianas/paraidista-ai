@@ -39,7 +39,7 @@ class Button:
 class UI:
     """Interfaz sencilla con botones Setup y Ejecutar y panel lateral."""
 
-    def __init__(self, screen, ground_y=520):
+    def __init__(self, screen, ground_y=520, show_back_button=False, back_callback=None):
         self.screen = screen
         self.width, self.height = screen.get_size()
         self.ground_y = ground_y
@@ -47,11 +47,20 @@ class UI:
         # Botones
         self.clicked_setup = False
         self.clicked_run = False
+        self.clicked_back = False
         btn_w, btn_h = 100, 36
         self.btn_setup = Button((20, 20, btn_w, btn_h), "Setup", self.font,
                                 callback=self._on_setup)
         self.btn_run = Button((140, 20, btn_w, btn_h), "Ejecutar", self.font,
                               callback=self._on_run)
+
+        # Botón de volver al menú (opcional)
+        self.show_back_button = show_back_button
+        if show_back_button:
+            self.btn_back = Button((self.width - 120, 20, btn_w, btn_h), "← Menú", self.font,
+                                   callback=self._on_back)
+            self.back_callback = back_callback
+
         # Panel data
         self.panel_rect = pygame.Rect(self.width - 220, 0, 220, self.height)
         self.population = []
@@ -63,9 +72,16 @@ class UI:
     def _on_run(self):
         self.clicked_run = True
 
+    def _on_back(self):
+        self.clicked_back = True
+        if self.back_callback:
+            self.back_callback()
+
     def handle_event(self, event):
         self.btn_setup.handle_event(event)
         self.btn_run.handle_event(event)
+        if self.show_back_button:
+            self.btn_back.handle_event(event)
 
     def render_background(self):
         # cielo y suelo
@@ -75,6 +91,8 @@ class UI:
         # dibujar botones
         self.btn_setup.draw(self.screen)
         self.btn_run.draw(self.screen)
+        if self.show_back_button:
+            self.btn_back.draw(self.screen)
 
     def render_panel(self):
         pygame.draw.rect(self.screen, (245, 245, 245), self.panel_rect)
