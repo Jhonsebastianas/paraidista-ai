@@ -126,7 +126,7 @@ class Parachutist:
             if fitness > 0.95:  # Aterrizaje correcto
                 font = pygame.font.SysFont("Arial", 28, bold=True)
                 txt = font.render("¡Buen trabajo!", True, (0, 120, 0))
-                #screen.blit(txt, (target_x - 80, ground_y - 60))
+                screen.blit(txt, (target_x - 80, ground_y - 60))
             else:
                 self.render_dust(screen)
             pygame.display.flip()
