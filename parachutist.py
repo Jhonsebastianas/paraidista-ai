@@ -123,11 +123,7 @@ class Parachutist:
         fitness += 0.3 * self.genes.get("F", 0.0)
 
         if render and screen:
-            if fitness > 0.95:  # Aterrizaje correcto
-                font = pygame.font.SysFont("Arial", 28, bold=True)
-                txt = font.render("¡Buen trabajo!", True, (0, 120, 0))
-                screen.blit(txt, (target_x - 80, ground_y - 60))
-            else:
+            if fitness <= 0.95:  # No aterrizaje correcto
                 self.render_dust(screen)
             pygame.display.flip()
             pygame.time.delay(700)

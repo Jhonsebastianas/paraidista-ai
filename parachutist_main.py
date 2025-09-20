@@ -28,6 +28,7 @@ def main():
     solution_found = False
     running_simulation = False
     max_generations = 100  # Límite máximo de generaciones para evitar bucles infinitos
+    last_parachute = None  # Para mantener la simulación en pantalla
 
     running = True
 
@@ -50,6 +51,7 @@ def main():
             generacion = 0
             ui.generation = generacion
             solution_found = False
+            last_parachute = None
             ui.clicked_setup = False
 
         if ui.clicked_run:
@@ -93,6 +95,7 @@ def main():
                 ui.render_panel()
                 pygame.display.flip()
                 if result.get("solution_found", False):
+                    last_parachute = parachute
                     solution_found = True
                     running_simulation = False
                     print(f"¡Solución encontrada en generación {generacion}!")
@@ -114,6 +117,12 @@ def main():
 
         # Render UI base cuando no estamos en la corrida
         ui.render_background()
+        if last_parachute:
+            last_parachute.render(screen)
+        if solution_found:
+            font = pygame.font.SysFont("Arial", 28, bold=True)
+            txt = font.render("¡Buen trabajo!", True, (0, 120, 0))
+            screen.blit(txt, (SCREEN_SIZE[0] // 2 - 80, GROUND_Y - 60))
         if poblacion:
             ui_population = [ParIndividual(ind) for ind in poblacion]
             for ind in ui_population:
