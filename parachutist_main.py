@@ -94,12 +94,19 @@ def main():
                 ui.set_population(ui_population)
                 ui.render_panel()
                 pygame.display.flip()
+                # Mostrar valores en cada generación
+                print(f"Generación {generacion}: V={genes_dict['V']:.2f}, B={genes_dict['B']:.2f}, S={genes_dict['S']:.2f}, F={genes_dict['F']:.2f}, Fitness={fitness:.2f}")
                 if result.get("solution_found", False):
                     last_parachute = parachute
                     solution_found = True
                     running_simulation = False
                     print(f"¡Solución encontrada en generación {generacion}!")
                     break  # Detener simulación de la generación actual
+
+            # Después de procesar toda la población, mostrar valores del mejor individuo
+            if ui_population:
+                best = max(ui_population, key=lambda p: p.fitness)
+                print(f"Generación {generacion + 1}: V={best.genes['V']:.2f}, B={best.genes['B']:.2f}, S={best.genes['S']:.2f}, F={best.genes['F']:.2f}, Fitness={best.fitness:.2f}")
 
             if not solution_found:
                 # Evolución
@@ -111,6 +118,9 @@ def main():
                     hijos = [mutacion(h) for h in hijos]
                     nuevaPoblacion.extend(hijos)
                 poblacion = nuevaPoblacion[:tamanoPoblacion]
+                # Incrementar generación después de evolución
+                generacion += 1
+                ui.generation = generacion
             elif generacion >= max_generations:
                 running_simulation = False
                 print(f"No se encontró solución en {max_generations} generaciones. Presiona Setup para reiniciar.")
